@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나만의 블로그!</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- JavaScript Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+    <style>
+
+        .center-image {
+            background-color: indigo;
+            width: 700px;
+            height: 400px;
+            margin: auto;
+            margin-bottom: 20px;
+        }
+
+        .comments-write {
+            width: 700px;
+            height: 350px;
+            margin: auto;
+            margin-bottom: 20px;
+            border: 2px solid black;
+            padding: 20px;
+        }
+
+        .comment-box {
+            width: 700px;
+            height: 50px;
+            margin: auto;
+            margin-bottom: 10px;
+            border: 2px solid black;
+        }
+
+        .my-image {
+            width: 700px;
+            height: 400px;
+            position: relative;
+        }
+
+        .my-btn {
+            display: block;
+            margin: auto;
+            margin-top: 5px;
+        }
+
+        .delete-btn {
+            float: right;
+            margin-top: 4px;
+            margin-right: 4px;
+        }
+
+        .my-table {
+            margin-top: 8px;
+        }
+
+        .my-textarea {
+            width: 100%;
+        }
+
+        .my-time {
+            float: left;
+        }
+
+
+    </style>
+    <script>
+        //페이지 실행되면 불러오기
+        $(document).ready(function (){
+            getComments();
+        })
+
+        //딱히 없어도 될거같은데 그냥 넣엇다.
+        function editComments(id){
+            let comments = $(`#${id}-comments`).text().trim();
+            $(`#${id}-textarea`).val(comments);
+        }
+
+        //겟요청
+        function getComments(){
+            $('#comments-box').empty();
+            $.ajax({
+                type: "GET",
+                url: "/api/comments",
+                success: function (response){
+                    for (let i = 0; i < response.length; i++){
+                        let comment = response[i];
+                        let id = comment.id;
+                        let username = comment.username;
+                        let title = comment.title;
+                        let createdAt = comment.createdAt;
+                        let comments = comment.comments;
+                        addHTML(id,username,title,createdAt,comments);
+                    }
+                }
+            })
+        }
+
+        //tempHtml생성, 모달과 같이생성
+        function addHTML(id, username, title, createdAt, comments){
+            let tempHtml = `<div class="comment-box">
+                                <table class="my-table" style="cursor: pointer">
+                                    <tr id="${id}-comment-box" data-bs-toggle="modal" data-bs-target="#exampleModal${id}">
+                                        <td>작성자: ${username}   </td>
+                                        <td>제목: ${title}   </td>
+                                        <td>작성날짜: ${createdAt}</td>
+                                    </tr>
+                                    <button id="${id}-delete" type="button" class="btn btn-info delete-btn" onclick="deleteComment(${id})">삭제</button>
+                                    <div class="modal fade" id="exampleModal${id}" tabindex="-1" aria-labelledby="exampleModalLabel${id}" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+<!--                                                    id를 id넣는곳 맨앞에 넣으면 안됨                -->
+                                                    <h3 class="modal-title" id="exampleModalLabel${id}">${title}</h3>
+                                                    <h5 style="margin-left: 10px">${username}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p id="${id}-comments" style="width: 100%">${comments}</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <p class="my-time">${createdAt}</p>
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+<!--                                                                                                    온클릭에 상세페이로가는것과 id값을 넘기는 함수를 넣음-->
+                                                    <button type="button" class="btn btn-primary" onclick="location.href='detail.html'; throwid(${id})">상세페이지</button>
+                                                    <button type="button" class="btn btn-primary" onclick="editComments(${id})" data-bs-target="#exampleModalToggle${id}" data-bs-toggle="modal">수정하기</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal fade" id="exampleModalToggle${id}" aria-hidden="true" aria-labelledby="exampleModalToggleLabel${id}" tabindex="-1">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h3 id="${id}-title" class="modal-title" id="exampleModalToggleLabel${id}">${title}</h3>
+                                                    <h5 id="${id}-username" style="margin-left: 10px">${username}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <textarea id="${id}-textarea" class="my-textarea"></textarea>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <p class="my-time">${createdAt}</p>
+                                                    <button class="btn btn-secondary" data-bs-target="#exampleModal${id}" data-bs-toggle="modal">뒤로가기</button>
+                                                    <button type="button" class="btn btn-primary" onclick="subComment(${id})">수정완료</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </table>
+                            </div>`;
+            $('#comments-box').append(tempHtml);
+        }
+
+        //id값을 넘기는 함수
+        function throwid(id){
+            localStorage.setItem('id',id)
+        }
+
+        //게시글 작성
+        function writeComments(){
+            let comments = $('#exampleFormControlTextarea1').val();
+            let username = $('#exampleFormControlInput1').val();
+            let title = $('#exampleFormControlInput2').val();
+            let data = {'username': username, 'title': title, 'comments': comments};
+            $.ajax({
+                type: "POST",
+                url: "/api/comments",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function (response){
+                    alert("작성 성공!!");
+                    window.location.reload();
+                }
+            })
+        }
+
+        //게시글 삭제
+        function deleteComment(id) {
+            $.ajax({
+                type: "DELETE",
+                url: `/api/comments/${id}`,
+                success: function (response) {
+                    alert("삭제!");
+                    window.location.reload();
+                }
+            })
+        }
+
+        //게시글 삭제
+        function subComment(id) {
+            let comments = $(`#${id}-textarea`).val().trim();
+            let username = $(`#${id}-username`).text().trim();
+            let title = $(`#${id}-title`).text().trim();
+            let data = {'comments': comments, 'username': username, 'title': title};
+            $.ajax({
+                type: "PUT",
+                url: `/api/comments/${id}`,
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function (response) {
+                    alert("수정 완료!")
+                    window.location.reload();
+                }
+            });
+        }
+
+    </script>
+</head>
+
+<body>
+    <div class="center-image">
+        <img class="my-image" src="https://pbs.twimg.com/media/EbSKBtIUMAA47Eq?format=jpg&name=large">
+    </div>
+    <div class="comments-write">
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">작성자 이름!</label>
+            <input type="email" class="form-control" id="exampleFormControlInput1" placeholder="당신은 누구신가요???">
+        </div>
+        <div class="mb-3">
+            <label for="exampleFormControlInput1" class="form-label">제목!</label>
+            <input type="email" class="form-control" id="exampleFormControlInput2" placeholder="이 게시글의 제목은???">
+        </div>
+        <div class="mb-3">
+            <label for="exampleFormControlTextarea1" class="form-label">하고싶은 말!</label>
+            <textarea class="form-control" id="exampleFormControlTextarea1" placeholder="하고싶은 말은???" rows="2"></textarea>
+            <button type="button" class="btn btn-dark my-btn" onclick="writeComments()">글쓰기</button>
+        </div>
+    </div>
+    <div id="comments-box">
+        <table class="table comment-box">
+            <tr>
+                <td>작성자 이름</td>
+                <td>제목</td>
+                <td>쓴 날짜</td>
+                <td>삭제</td>
+            </tr>
+        </table>
+        <table class="table comment-box" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            <tr>
+                <td>작성자 이름</td>
+                <td>제목</td>
+                <td>쓴 날짜</td>
+                <td>삭제</td>
+            </tr>
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            ...
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </table>
+    </div>
+</body>
+
+</html>
